@@ -2,7 +2,7 @@
 
 Welcome! This is my personal repository for all code, analyses, and documents related to my MSc in Epidemiology, using R and RStudio.
 
-## 📁 Structure
+## 📁 Structur
 - `scripts/` — R scripts for analysis, cleaning, etc.
 - `notebooks/` — RMarkdown files for full write-ups
 - `data/` — Raw or processed datasets (excluded from Git if too large)
