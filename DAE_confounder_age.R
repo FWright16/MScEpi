@@ -1,95 +1,67 @@
-#Younger children much more likely to be breastfed, vitA status changes with age?
-#associated with exposure and outcome
-
-library(dplyr)
-unique(data$agegp)
-
-for(i in sort(na.omit(unique(data$agegp)))) {
-  cat("\n\nAge group:", i, "\n")
-  print(table(
-    vita   = data$vita[data$agegp == i],
-    currbf = data$currbf[data$agegp == i]
-  ))
-}
-
-# Age group: 2 (311)
-# currbf
-# vita   0   1
-# 0   4  83
-# 1   8 216
-# Non-BF: 0.667
-# BF: 0.722
-# RR: 0.722/0.667 = 1.08
-# 
-# Age group: 3 (245)
-# currbf
-# vita   0   1
-# 0  25  38
-# 1  76 106
-# 
-# 
-# Age group: 4 (194)
-# currbf
-# vita   0   1
-# 0  34   3
-# 1 139  18
-# 
-# 
-# Age group: 5 (59)
-# currbf
-# vita  0  1
-# 0 11  1
-# 1 46  1
-
 library(DescTools)
 
-# get unique age groups (without NA)
-agegroups <- sort(na.omit(unique(data$agegp)))
+# Get the age groups that actually appear in the data
+age_groups <- sort(na.omit(unique(data$agegp)))
 
-results_age <- list()
-
-for(i in agegroups){
+for(a in age_groups){
   
-  # subset the data for this age group
-  sub <- subset(data, agegp == i)
+  # Subset the data for that age group
+  sub <- subset(data, agegp == a)
   
-  # build the 2x2 table: rows = breastfeeding, columns = vita
-  tab <- table(currbf = sub$currbf,
-               vita   = sub$vita)
+  # Make the 2×2 table: rows = currbf (0,1), cols = vita (0,1)
+  tab <- table(sub$currbf, sub$vita)
   
-  # reorder: row1 = BF=1, row2 = BF=0; col1 = Vita=1, col2 = Vita=0
-  tab_rr <- tab[c("1","0"), c("1","0")]
+  cat("\nAge group:", a, "\n")
+  print(tab)
   
-  # calculate RR with CI
-  rr_out <- RelRisk(tab_rr, conf.level = 0.95)
-  
-  # store
-  results_age[[as.character(i)]] <- rr_out
-  
-  # print
-  cat("\nAge group:", i, "\n")
-  print(rr_out)
+  # Calculate OR + 95% CI
+  OR_out <- OddsRatio(tab, conf.level = 0.95)
+  print(OR_out)
 }
 
-# Age group: 2 
-# rel. risk    lwr.ci    upr.ci 
-# 1.0836120 0.8257501 1.8564307 
+# Age group: 2
+# 
+# 0   1
+# 0   4   8
+# 1  83 216
+# odds ratio     lwr.ci     upr.ci 
+# 1.3012048  0.3816175  4.4367308 
 # 
 # Age group: 3 
-# rel. risk    lwr.ci    upr.ci 
-# 0.9782529 0.8446040 1.1441060 
+# 
+# 0   1
+# 0  25  76
+# 1  38 106
+# odds ratio     lwr.ci     upr.ci 
+# 0.9175900  0.5114965  1.6460944 
 # 
 # Age group: 4 
-# rel. risk    lwr.ci    upr.ci 
-# 1.0668037 0.8079905 1.2266648 
+# 
+# 0   1
+# 0  34 139
+# 1   3  18
+# odds ratio     lwr.ci     upr.ci 
+# 1.4676259  0.4086739  5.2705250 
 # 
 # Age group: 5 
-# rel. risk    lwr.ci    upr.ci 
-# 0.6195652 0.1167785 1.1591965 
+# 
+# 0  1
+# 0 11 46
+# 1  1  1
+# odds ratio     lwr.ci     upr.ci 
+# 0.23913043 0.01384897 4.12906946 
 
-#Total in each age group decreases as ages increase
-#But RRs remain round 1 with all CIs including 1 
-#When controlling for age, the association between breastfeeding and vitA deficiency largely disappeared
-#From table stratum specific RRs were close to 1 and CIs included 1
-#different to crude RR suggesting age confound the crude association (positive confounder)
-#age band 5 had lower number
+tab_age <- table(data$currbf, data$vita, data$agegp)
+mantelhaen.test(tab_age)
+
+Mantel-Haenszel chi-squared test without continuity correction
+
+# data:  tab_age
+# Mantel-Haenszel X-squared = 0.00041245, df = 1, p-value = 0.9838
+# alternative hypothesis: true common odds ratio is not equal to 1
+# 95 percent confidence interval:
+#   0.6238178 1.6189751
+# sample estimates:
+#   common odds ratio 
+# 1.00496 
+

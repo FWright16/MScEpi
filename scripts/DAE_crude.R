@@ -36,11 +36,14 @@ RelRisk(tab_rr, conf.level = 0.95)
 # 0.91         0.85      0.98 
 #The crude RR of vitamin A deficiency among breastfed children compared to non-breastfed children was 0.91 (95% CI: 0.85-0.98)
 #Children who breastfed had 9% lower relative risk of vit A deficiency
-#CI doesn't include 1 so statistical evidence of an association between breastfeeding and lower riusk of vit A deficiency
+#CI doesn't include 1 so statistical evidence of an association between breastfeeding and lower risk of vit A deficiency
 #breastfeeding is protective effect
 
+
+(228/565)/(74/270)
+
 #sample size large 1137 children so chi-squared
-chisq.test(tab_rr)
+chisq.test(tab)
 
 # Pearson's Chi-squared test with Yates'
 # continuity correction
@@ -48,7 +51,7 @@ chisq.test(tab_rr)
 # data:  tab_rr
 # X-squared = 6.0814, df = 1, p-value = 0.01366
 
-A chi-squared test with Yates' continuity correction gave X-squared=6.08 (df=1, p=0.014). WIthout continuity correction X-squared = 6.45, p-value=0.01)
+#A chi-squared test with Yates' continuity correction gave X-squared=6.08 (df=1, p=0.014). WIthout continuity correction X-squared = 6.45, p-value=0.01)
 Good evidence of an association between breastfeeding and vitA deficiency
 
 
@@ -57,3 +60,13 @@ Good evidence of an association between breastfeeding and vitA deficiency
 # No                74 (21.5%)     270 (78.5%)    344
 # Yes               228 (28.8%)    565 (71.2%)    793
 
+library(DescTools)
+
+tab <- matrix(c(74,270,
+                228,565),
+              nrow = 2, byrow = TRUE)
+
+OddsRatio(tab, conf.level = 0.95)
+
+chisq.test(tab, correct=FALSE)
+tab
