@@ -310,7 +310,9 @@ mort <- mort |>
 
 #--- Create Surv object
 mortsurv <- Surv(time = mort$followup_years, event = mort$died)
-
+#Each participant was followed for X years, this 
+#variable shows whether they died (1) or are 
+#alive/censored (0)
 
 ```
 
@@ -319,7 +321,7 @@ You are now asked to calculate the all-cause mortality rate per 1000 person-year
 For an equivalent to _stmh_ we can use the rateratio() function from epitools.
 
 ```{r}
-# Calculate rates per 1000 person-years by hypertension status
+# Calculate rates per 1000 person-years by hypertension status SUMMARY TABLE
 rate_table <- mort |> 
   filter(!is.na(hyper)) |> 
   group_by(hyper) |> 
@@ -339,7 +341,8 @@ rate_table |>
 
 # Calculate rate ratio using epitools::rateratio()
 # This is the R equivalent of Stata's stmh command
-# Format: matrix with rows for each group, columns for deaths and person-years
+# Format: matrix with rows for each group, columns for deaths and person-years,
+#rateratio() expects a 2x2 matrix
 rate_matrix <- rate_table |> 
   select(deaths, person_years) |> 
   as.matrix()
@@ -353,6 +356,8 @@ irr$measure |>
   filter(measure == "2") |> 
   pull(estimate)
 
+# Rate ratio = 3.08
+#The mortality rate among participants with hypertension is 3.08 times higher than among those without hypertension, after accounting for their different total person-years
 ```
 
 The question set asks you to compare survival in people with and without hypertension, first by looking at the Kaplan Meier survival table and then at the Kaplan Meier survival plot, conducting a log-rank test. Question 18 should be omitted here as it is specific to stset in Stata.
@@ -363,7 +368,7 @@ The question set asks you to compare survival in people with and without hyperte
 fit_mort <- survfit(mortsurv ~ 1, data = mort)
 summary(fit_mort, times = c(0.5, 1, 1.5, 2, 2.5, 3))
 
-#--- KM plot without CIs
+#--- KM plot without CIs OR DELETE LABELS
 ggsurvplot(
   fit = survfit(mortsurv ~ hyper, data = mort),
   censor = F,
@@ -371,7 +376,7 @@ ggsurvplot(
   xlab = "Years",
   # ylim = c(0.7, 1.0), # show only some of the y-axis for clarity if desired
   legend.title = "Hypertension",
-  legend.labs = c("Hypertensive", "Not Hypertensive")
+  legend.labs = c("Not Hypertensive", "Hypertensive")
   )
 
 #--- KM plot with CIs
@@ -381,7 +386,7 @@ ggsurvplot(
   conf.int = T,
   xlab = "Years",
   legend.title = "Hypertension",
-  legend.labs = c("Hypertensive", "Not Hypertensive")
+  legend.labs = c("Not Hypertensive", "Hypertensive")
   )
 
 #--- Cumulative mortality
@@ -392,11 +397,12 @@ ggsurvplot(
   censor = FALSE,
   xlab = "Years",
   legend.title = "Hypertension",
-  legend.labs = c("Hypertensive", "Not Hypertensive")
+  legend.labs = c("Not Hypertensive", "Hypertensive")
 )
 
 #--- Logrank test
 survdiff(mortsurv ~ hyper, data = mort)
+#The logrank test shows a statistically significant difference in survival between hypertensive and non-hypertensive participants
 
 ```
 
