@@ -24,7 +24,8 @@ The key epidemiological idea for this practical is that in cohort studies, peopl
 ```{r setup}
 # Load required packages
 library(haven)        # For reading Stata files
-library(gtsummary)    # For regression tables
+library(gtsummary)# For regression tables
+install.packages("marginaleffects")
 library(marginaleffects)  # For predictions and contrasts
 library(lmtest)       # For likelihood ratio tests
 library(tidyverse)    # For data manipulation
@@ -47,8 +48,10 @@ We'll read the Whitehall dataset, which contains information on mortality in Bri
 
 ```{r import}
 # Read the Whitehall dataset
-whitehall <- read_stata(here("sme-2026/data", "whitehal.dta")) |> 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+whitehall <- read_stata(here("SME/data/whitehal.dta")) |> 
   mutate(across(where(is.labelled), as_factor))
+
 
 # Examine the structure
 glimpse(whitehall)
@@ -130,6 +133,10 @@ cat("Total deaths:", total_deaths, "\n")
 cat("Total person-years:", round(total_pyears, 1), "\n")
 cat("Rate per 1000 person-years:", round(rate, 2), "\n")
 cat("95% CI: (", round(lower_ci, 2), ",", round(upper_ci, 2), ")\n")
+#Total deaths: 403 
+#Total person-years: 27605.4
+#Rate per 1000 person-years: 14.6
+#95% CI: (13.24 , 16.1)
 ```
 
 1. We sum up all the deaths (the `all` variable where 1 = died)
@@ -172,6 +179,8 @@ model_overall |>
   select(estimate, conf.low, conf.high) |> 
   knitr::kable(digits = 2,
                col.names = c("Rate per 1000", "95% CI Lower", "95% CI Upper"))
+#Rate per 1000	95% CI Lower	95% CI Upper
+#14.6	13.22	16.07
 ```
 
 What's happening in the code here:
@@ -212,12 +221,14 @@ To estimate predicted rates per age group, we use avg_predictions from the margi
 model_age <- glm(all ~ agecat + offset(log(followup_years)), 
                  family = poisson, 
                  data = whitehall)
+#model estimates how martality rates differ by age group, adjusting for different follow-up times
 
 # Get predicted rates for each age group
 # These are "marginal predictions" - the predicted rate within each age group
 predictions_age <- avg_predictions(model_age, 
                                    variables = "agecat",
                                    type = "response")
+#calculates the model-predicted mortality rate for each age category, adjusted for follow-up time (via the offset), expressed as actual rates (not log rates)
 
 # Display as nicely printed table with rates per 1000 person-years
 predictions_age |> 
