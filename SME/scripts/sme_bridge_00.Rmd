@@ -239,7 +239,8 @@ library(tidyverse)
 library(here)
 
 # Read Whitehall data from Stata file
-whitehall <- read_stata(here("sme-2026/data", "whitehal.DTA")) |> 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+whitehall <- read_stata(here("SME/data/whitehal.DTA")) |> 
   mutate(across(where(is.labelled), haven::as_factor))
 
 # Examine structure
@@ -272,7 +273,7 @@ library(here)
 
 # Check project root
 here()
-# for me: "/Users/danieljcarter/Documents/Teaching/SME/sme_asme_praticals"
+# for me: "/Users/finnwright16/Desktop/STuDy/MScEpi"
 
 # Read data
 whitehall <- read_stata(here("sme-2026/data", "whitehal.dta"))
