@@ -1,0 +1,713 @@
+---
+title: "Bridge to Epidemiology: R Skills for SME"
+author: "Daniel J Carter"
+date: "2025-01-08"
+output: html_document
+---
+
+# Purpose of This Document
+
+This bridge document is designed for students who have completed the **STEPH practicals in R** and are now moving into the **Statistics and Epidemiology Methods (SME)** practicals.
+
+**You should use this document if:**
+
+-   You've done the STEPH practicals in R
+-   You're comfortable with basic R commands\
+-   You need to learn the R tools required for SME practicals
+
+**If you're brand new to R:** Work through intro_01 through intro_05 instead of this document.
+
+------------------------------------------------------------------------
+
+# What STEPH Taught vs What SME Needs
+
+**STEPH covered:**
+
+-   Basic R commands (mean, sd, summary, table)
+-   **R scripts (.R files)** with comments
+-   `setwd()` for working directory
+-   `rio::import()` for data
+-   Base R plots
+-   Linear regression with `lm()`
+-   Some pipes (`|>`) and basic dplyr
+
+**SME requires additional skills:**
+
+-   **R Markdown files (.Rmd)** instead of scripts
+-   **Tidyverse** data manipulation
+-   **Stata files** with haven
+-   **Factors** for regression (reference groups!)
+-   **Modern tables** with gtsummary
+-   **Epidemiology models** (Poisson, logistic, survival)
+-   **File paths** with here()
+
+This document fills those gaps efficiently using the **Whitehall cohort dataset** you'll work with in SME practicals.
+
+------------------------------------------------------------------------
+
+# Part 1: R Markdown - A Different Way of Working
+
+## What is R Markdown?
+
+In STEPH, you worked in **R scripts (.R files)** where:
+
+-   Everything is code
+-   You add comments with `#`
+-   You run code and view output separately
+-   Output appears in console or plots pane
+
+In SME, you'll work in **R Markdown files (.Rmd)** where:
+
+-   You mix narrative text and code
+-   Code goes in special "chunks"
+-   You can create complete documents (optional)
+-   Text, code, and output flow together
+
+## Why R Markdown?
+
+R Markdown is better for data analysis because:
+
+1.  **Documentation** - Your explanations live with your code
+2.  **Reproducibility** - Someone can see your entire workflow
+3.  **Communication** - Combine analysis and interpretation
+4.  **Organisation** - Section headers structure your work
+
+Unlike the Intro files, I have written this script in R Markdown so you can see what it looks like. If you click the 'Visual' tab next to the 'Source' tab in the upper left of the Environment pane, you can see how the Notebook nicely renders. It's beyond the scope of this document to provide you with full instructions, but using LaTeX (a software system for typesetting), I can click the 'Knit' button to produce a doc, pdf, or html version of the 'Visual' pane of this document -- handy if I want to quickly share something with a collaborator who doesn't work in R! You might want to try reading through some of this material in the Visual pane.
+
+## R Script vs R Markdown
+
+**R Script (.R file) - STEPH approach:**
+
+``` r
+# Load data
+data <- read.csv("data.csv")
+
+# Calculate mean age
+mean(data$age)  # Output appears in console: 45.3
+
+# This is how you've been working
+```
+
+**R Markdown (.Rmd file) - SME approach:**
+
+```` markdown
+## Analysis
+
+First, I load the data:
+
+```{r}
+data <- read.csv("data.csv")
+```
+
+The mean age is `r mean(data$age)` years.
+
+I can write normal text here to explain my analysis!
+````
+
+**Key differences:**
+
+-   Text doesn't need `#` - it's just text!
+-   Code goes inside special chunks wrapped in backticks
+-   You can insert R output directly into sentences
+-   More readable for someone reviewing your work
+
+
+## Structure of an R Markdown File
+
+Every .Rmd file has three parts:
+
+### 1. YAML Header (at the very top)
+
+``` yaml
+---
+title: "My Analysis"
+author: "Your Name"
+date: "2025-01-08"
+output: html_document
+---
+```
+
+This controls the document title and output format - put your titles here.
+
+### 2. Text (Regular Writing)
+
+``` markdown
+# Main Heading
+## Subheading
+
+This is regular text. You can make **bold** and *italic* text.
+
+- Bullet point 1
+- Bullet point 2
+
+Just write normally - no # needed!
+```
+
+### 3. Code Chunks
+
+Code chunks are wrapped in three backticks:
+
+```` markdown
+```{r chunk_name}
+# Your R code here
+library(tidyverse)
+summary(data)
+```
+````
+
+Remember you can:
+
+-   Click the green "play" button to run a chunk
+-   Use Ctrl+Shift+Enter to run current chunk
+-   Run line-by-line with Ctrl+Enter (same as scripts!)
+
+No highlighting!!
+
+## Chunk Options
+
+Control how chunks of code behave by adding options:
+
+```` markdown
+```{r load_data, message=FALSE, warning=FALSE}
+# Code here
+```
+````
+
+**Common options:**
+
+-   `message=FALSE` - Hide messages (e.g., from loading packages)
+-   `warning=FALSE` - Hide warnings
+-   `echo=FALSE` - Hide code, show output only
+-   `include=FALSE` - Run code but hide everything
+
+**Naming chunks** (like `load_data` above) helps with navigation.
+
+## Setup Chunk Pattern
+
+Most .Rmd files start with a setup chunk that loads packages:
+
+```` markdown
+```{r setup, include=FALSE}
+# Set defaults for all chunks
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE
+)
+
+# Load packages
+library(tidyverse)
+library(haven)
+library(here)
+```
+````
+
+This chunk runs first automatically and sets up your environment. Here I've loaded a few packages, and also told R I don't want to see any warnings (danger!).
+
+## Inline R Code
+
+Insert R results directly into text with backticks:
+
+``` markdown
+The dataset has `r nrow(data)` observations.
+The mean age is `r round(mean(data$age), 1)` years.
+```
+
+This becomes when rendered: "The dataset has 500 observations. The mean age is 45.3 years."
+
+## Key Difference
+
+**R Scripts:** Code with `#` comments\
+**R Markdown:** Narrative with embedded code chunks
+
+Both let you run code interactively. R Markdown is better for creating analyses that others (including future you) can understand and it more accurately reflects how we think about R.
+
+------------------------------------------------------------------------
+
+# Part 2: Reading Stata Files with haven
+
+## Why haven Instead of rio?
+
+STEPH used `rio::import()` for all file types. SME practicals use Stata files (.dta), and the `haven` package is specifically designed for these with better handling of Stata's value labels.
+
+## Loading Whitehall Dataset
+
+Let's load the dataset you'll use in SME practicals. You might need to change the filepath. When you load the here() library, R will tell you where you currently are on your computer. My data is in a folder called "data" within a folder called "sme-2026".
+
+```{r eval=FALSE}
+library(haven)
+library(tidyverse)
+library(here)
+
+# Read Whitehall data from Stata file
+whitehall <- read_stata(here("sme-2026/data", "whitehal.DTA")) |> 
+  mutate(across(where(is.labelled), haven::as_factor))
+
+# Examine structure
+glimpse(whitehall)
+```
+
+**What this does:**
+
+-   `read_stata()` - Reads the .dta file
+-   `mutate(across(where(is.labelled), as_factor))` - Converts Stata value labels to R factors
+-   This pattern converts ALL labelled variables at once -- Whitehall isn't labelled, but other datasets may be.
+
+STEPH used `setwd()`. SME uses `here()` for portable file paths as long as the same folder structure is present on each computer.
+
+```{r eval=FALSE}
+# STEPH approach (breaks on other computers)
+setwd("C:/Users/Dan/Documents/SME")
+whitehall <- read_stata("data/WHITEHAL.dta")
+
+# SME approach (works anywhere)
+library(here)
+whitehall <- read_stata(here("sme-2026/data", "whitehal.dta"))
+```
+
+
+## Using here()
+
+```{r eval=FALSE}
+library(here)
+
+# Check project root
+here()
+# for me: "/Users/danieljcarter/Documents/Teaching/SME/sme_asme_praticals"
+
+# Read data
+whitehall <- read_stata(here("sme-2026/data", "whitehal.dta"))
+# path to dta: "/Users/danieljcarter/Documents/Teaching/SME/sme_asme_praticals/sme-2026/data/whitehal.dta"
+```
+
+
+## Understanding the Data
+
+```{r eval=FALSE}
+# Check first rows
+head(whitehall)
+
+# Summary statistics
+summary(whitehall)
+```
+
+**Key variables in whitehall:**
+
+-   `timein`, `timeout` - Entry and exit dates (days since 1960-01-01)
+-   `all` - All-cause mortality indicator (0/1)
+-   `chd` - CHD mortality indicator (0/1)
+-   `grade` - Employment grade (factor: "High grade" / "Low grade")
+-   `agein` - Age at entry (years)
+
+## Calculate Follow-up Time
+
+For cohort studies, we need person-years of follow-up, which we can get using mutate:
+
+```{r eval=FALSE}
+# Calculate follow-up in years
+whitehall <- whitehall |> 
+  mutate(followup_years = as.numeric(timeout - timein) / 365.25)
+
+# Check the calculation
+summary(whitehall$followup_years)
+```
+
+We'll use this dataset for all examples below.
+
+------------------------------------------------------------------------
+
+# Part 3: Tidyverse Data Manipulation
+
+You've seen some dplyr in STEPH. SME uses it extensively. Here is a brief overview of the core tidyverse functions for data manipulation. Make sure you understand what each chunk is doing - you should be familiar with each of these dplyr verbs. If you need a refresher on this, see intro_03.
+
+## The Pipe |>
+
+The pipe takes what's on the left and moves it to what's on the right, so we can clearly see what is going on in each line. We take the dataset, filter it, then get a summary.
+
+```{r eval=FALSE}
+# Without pipes (hard to read)
+summary(filter(whitehall, agein > 50))
+
+# With pipes (readable left-to-right)
+whitehall |> 
+  filter(agein > 50) |> 
+  summary()
+```
+
+## filter() - Keep Rows
+
+```{r eval=FALSE}
+# People aged 40-60
+whitehall |> 
+  filter(agein >= 40, agein <= 60)
+
+# High grade OR over age 55
+whitehall |> 
+  filter(grade == 2 | agein > 55)
+
+# Remove missing follow-up
+whitehall |> 
+  filter(!is.na(followup_years))
+
+# Multiple conditions
+whitehall |> 
+  filter(agein >= 40, agein <= 65, all == 1) # don't forget the use of ==
+```
+
+## select() - Choose Columns
+
+```{r eval=FALSE}
+# Specific columns
+whitehall |> 
+  select(agein, grade, all, followup_years)
+
+# All numeric columns
+whitehall |> 
+  select(where(is.numeric))
+
+# Drop columns
+whitehall |> 
+  select(-timein, -timeout)
+```
+
+## mutate() - Create or Modify Columns
+
+```{r eval=FALSE}
+# Create age groups
+whitehall <- whitehall |> 
+  mutate(
+    agecat = cut(agein, 
+                 breaks = c(40, 50, 60, 70),
+                 labels = c("40-49", "50-59", "60-69"),
+                 right = FALSE)
+  )
+
+# Calculate mortality rate
+whitehall <- whitehall |> 
+  mutate(rate_per_1000 = (all / followup_years) * 1000)
+
+# Multiple new variables at once
+whitehall <- whitehall |> 
+  mutate(
+    age_squared = agein^2,
+    older = agein >= 60,
+    followup_months = followup_years * 12
+  )
+```
+
+## group_by() and summarise()
+
+```{r eval=FALSE}
+# Mortality by grade
+whitehall |> 
+  group_by(grade) |> 
+  summarise(
+    n = n(),
+    deaths = sum(all),
+    person_years = sum(followup_years),
+    rate_per_1000 = (deaths / person_years) * 1000
+  )
+
+# By grade and age group
+whitehall |> 
+  mutate(agecat = cut(agein, breaks = c(40, 50, 60, 70))) |> 
+  group_by(grade, agecat) |> 
+  summarise(
+    deaths = sum(all),
+    person_years = sum(followup_years),
+    rate = (deaths / person_years) * 1000
+  )
+
+# Mean age by grade
+whitehall |> 
+  group_by(grade) |> 
+  summarise(
+    mean_age = mean(agein),
+    sd_age = sd(agein),
+    min_age = min(agein),
+    max_age = max(agein)
+  )
+```
+
+## across() - Work with Multiple Columns
+
+```{r eval=FALSE}
+# Round all numeric columns
+whitehall |> 
+  mutate(across(where(is.numeric), round, 2))
+
+# Convert multiple variables to factors
+whitehall |> 
+  mutate(across(c(all, chd), as.factor))
+
+# Get means of specific columns
+whitehall |> 
+  summarise(across(c(agein, followup_years), mean, na.rm = TRUE))
+```
+
+------------------------------------------------------------------------
+
+# Part 4: Working with Factors
+
+Factors are extensively used for categorical variables and so working with factors is extremely useful for epidemiology. You should be able to manipulate factors and below is a reminder of how some of this works: see intro_04 for more on working with factor variables.
+
+In regression, the **first level of a factor is the reference group** -- if this isn't explicitly specified, R will default to alphabetical ordering:
+
+```{r eval=FALSE}
+# Convert grade to a factor
+whitehall <- whitehall |> 
+  mutate(grade = factor(grade,
+                        levels = c(1, 2),
+                        labels = c("Low grade", "High grade")))
+
+# Check current levels
+levels(whitehall$grade)
+
+# "High grade" would be reference if we read in using Stata value labels
+# In regression, this compares "Low grade" to "High grade"
+# Probably backwards for interpretation!
+```
+
+## Checking and Setting Reference Groups
+
+```{r eval=FALSE}
+# Always check first
+levels(whitehall$grade)
+
+# Change reference to "Low grade" - it already is, but this is for your reference
+whitehall <- whitehall |> 
+  mutate(grade = fct_relevel(grade, "Low grade"))
+
+```
+
+## Creating Age Categories
+
+```{r eval=FALSE}
+# Create age groups with correct ordering
+whitehall <- whitehall |> 
+  mutate(
+    agecat = cut(agein,
+                 breaks = c(40, 50, 60, 70),
+                 labels = c("40-49", "50-59", "60-69"),
+                 right = FALSE)
+  )
+
+# Check levels - automatically in order
+levels(whitehall$agecat)
+# "40-49" "50-59" "60-69"
+```
+
+**ALWAYS check the reference group before fitting models!**
+
+```{r eval=FALSE}
+# 1. Check
+levels(whitehall$grade)
+
+# 2. Set if needed
+whitehall <- whitehall |> 
+  mutate(grade = fct_relevel(grade, "Low grade"))
+
+# 3. Verify
+levels(whitehall$grade)
+
+# 4. NOW fit model
+model <- glm(all ~ grade + offset(log(followup_years)),
+             family = poisson, data = whitehall)
+
+model |> tbl_regression()
+```
+
+------------------------------------------------------------------------
+
+# Part 5: Modern Tables with gtsummary
+
+STEPH used base R `summary()`. SME uses `gtsummary` for tables as shown above with tbl_regression().
+
+## Descriptive Tables
+
+```{r eval=FALSE}
+library(gtsummary)
+
+# Basic summary
+whitehall |> 
+  select(agein, grade, all) |> 
+  tbl_summary()
+
+# Stratified by grade
+whitehall |> 
+  select(agein, all, followup_years, grade) |> 
+  tbl_summary(by = grade)
+
+# With overall column
+whitehall |> 
+  select(agein, grade, all) |> 
+  tbl_summary(by = grade) |> 
+  add_overall()
+```
+
+## Regression Tables
+
+You have not yet seen Poisson models, but you just need to know for the below that, much like linear regression, they fit a model to some data and output a measure of effect -- this is to show you the general R syntax for modelling, the same would apply to the lm() function for linear modelling that you have seen.
+
+```{r eval=FALSE}
+# Fit Poisson model
+model <- glm(all ~ grade + offset(log(followup_years)),
+             family = poisson,
+             data = whitehall)
+
+# Display as tidy table
+model |> 
+  tbl_regression(
+    exponentiate = TRUE,  # Shows rate ratios
+    label = list(grade ~ "Employment Grade")
+  )
+
+# Display as summary, unexponentiated, more information
+summary(model)
+```
+
+The tbl_regression() function creates a table with:
+
+-   Variable labels
+-   Rate ratios (OR, RR depending on model)
+-   95% confidence intervals
+-   P-values
+
+## Simple Tables with kable
+
+For quick neat summary tables:
+
+```{r eval=FALSE}
+whitehall |> 
+  group_by(grade) |> 
+  summarise(
+    n = n(),
+    mean_age = mean(agein),
+    deaths = sum(all),
+    person_years = sum(followup_years)
+  ) |> 
+  knitr::kable(digits = 1, caption = "Summary by Grade")
+```
+
+
+------------------------------------------------------------------------
+
+# Part 10: Quick Reference
+
+## Packages for SME
+
+```{r eval=FALSE}
+library(tidyverse)    # Data manipulation & ggplot2
+library(haven)        # Read Stata files
+library(here)         # File paths
+library(gtsummary)    # Tables
+library(survival)     # Survival analysis
+library(survminer)    # Survival plots
+library(forcats)      # Factor manipulation (in tidyverse)
+```
+
+-----------------------------------------
+
+# Quick Reference: STEPH vs SME
+
+## Working Style
+
+**STEPH:** R scripts (.R) with `#` comments
+**SME:** R Markdown (.Rmd) with narrative + chunks
+
+## Data Import
+
+**STEPH:**
+
+```{r eval=FALSE}
+library(rio)
+data <- import("file.csv")
+```
+
+**SME:**
+
+```{r eval=FALSE}
+library(haven)
+whitehall <- read_stata(here("data", "WHITEHAL.dta")) |> 
+  mutate(across(where(is.labelled), as_factor))
+```
+
+## File Paths
+
+**STEPH:**
+
+```{r eval=FALSE}
+setwd("C:/Users/Me/Desktop/STEPH")
+```
+
+**SME:**
+
+```{r eval=FALSE}
+library(here)
+data <- read_stata(here("data", "file.dta"))
+```
+
+## Tables
+
+**STEPH:**
+
+```{r eval=FALSE}
+aggregate(bweight ~ sex, data = bab9, FUN = mean)
+```
+
+**SME:**
+
+```{r eval=FALSE}
+whitehall |> 
+  select(agein, grade) |> 
+  tbl_summary(by = grade)
+```
+
+## Regression Output
+
+**STEPH:**
+
+```{r eval=FALSE}
+model <- lm(depscore ~ children, data = depress)
+summary(model)
+```
+
+**SME:**
+
+```{r eval=FALSE}
+model <- lm(agein ~ grade, data = whitehall)
+model |> tbl_regression()
+```
+
+**The core concepts are the same - SME just uses a different set of tools!**
+
+------------------------------------------------------------------------
+
+## Before Starting SME
+
+Make sure you can:
+
+-   [ ] Work in R Markdown files and not just scripts
+-   [ ] Read Stata files with haven + as_factor()
+-   [ ] Use filter, mutate, group_by, summarise
+-   [ ] Check and set factor reference groups
+-   [ ] Create tables with tbl_summary() and tbl_regression()
+-   [ ] Use here() for file paths
+
+------------------------------------------------------------------------
+
+# Next Steps
+
+You're ready for SME practicals!
+
+**Remember:**
+
+-   The epidemiology concepts are new (SME teaches those)
+-   The R syntax is just an extension of STEPH, the logic is the same
+-   Focus on the statistics - the R follows naturally
+
+**File summary:**
+
+-   intro_01 through intro_05: Comprehensive R introduction
+-   intro_06: RStudio Projects and workflow
+-   SME practicals: The epidemiology itself!
+
