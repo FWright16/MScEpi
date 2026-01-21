@@ -45,6 +45,7 @@ icb_age_sex <- long %>%
 
 glimpse(icb_age_sex)
 
+sum(icb_age_sex$pop) #53 107 169
 
 
 
