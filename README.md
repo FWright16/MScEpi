@@ -3,11 +3,10 @@
 Welcome! This is my personal repository for all code, analyses, and documents related to my MSc in Epidemiology, using R and RStudio.
 
 ## 📁 Structure
-- `scripts/` — R scripts for analysis, cleaning, etc.
-- `notebooks/` — RMarkdown files for full write-ups
-- `data/` — Raw or processed datasets (excluded from Git if too large)
-- `results/` — Plots, tables, exported results
-- `docs/` — Methodology notes or explanations
+- `SME/` — Statistical Methods in Epidemiology - RMarkdown files
+- `STEPH/` — Statistics for EPH
+- `Intro2R/` — Introduction to R work
+- `SummerProject/` — Data and scripts from summer project
 
 ## 🔧 Setup
 To run this project, open it in RStudio and install required packages listed in each R script or RMarkdown file.
