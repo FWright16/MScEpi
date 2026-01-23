@@ -34,7 +34,6 @@ library(janitor)
 here::here()
 source(here("SME", "scripts","sme-2026-practical-6","mh_functions.R")) 
 source(here("SME", "scripts","sme-2026-practical-6","or_function.R")) 
-"Practicals",
 
 # Set options for cleaner output
 options(digits = 3, scipen = 999)

@@ -6,6 +6,8 @@ output:
     toc: true
     toc_float: true
     theme: united
+editor_options: 
+  chunk_output_type: inline
 ---
 
 Below is an R Markdown setup chunk to set default parameters for display - for more info on setup chunks, see intro_06
@@ -41,7 +43,8 @@ If you are using the recommended project structure from intro_06, I suggest you 
 
 ```{r load-packages}
 # Load required packages
-library(tidyverse)  
+library(tidyverse) 
+install.packages('patchwork')
 library(patchwork)  # For combining multiple plots - might need to install!
 library(here)       
 ```
@@ -57,10 +60,11 @@ library(here)
 # source(here("functions", "ploglik_function.R"))
 
 # If files are in the same directory as this Rmd:
-source(here("blik_function.R"))
-source(here("bloglik_function.R"))
-source(here("plik_function.R"))
-source(here("ploglik_function.R"))
+here::here()
+source(here("SME", "scripts","sme-2026-practical-8","blik_function.R")) 
+source(here("SME", "scripts","sme-2026-practical-8","bloglik_function.R"))
+source(here("SME", "scripts","sme-2026-practical-8","plik_function.R"))
+source(here("SME", "scripts","sme-2026-practical-8","ploglik_function.R"))
 
 ```
 
@@ -101,6 +105,7 @@ print(combined_plot)
 
 # Save combined plot
 # ggsave("q1_combined.png", combined_plot, width = 8, height = 12)
+ggsave(here('SME','scripts','sme-2026-practical-8','q1_combined.png'),combined_plot,width=8,height=12)
 
 # If you have an 'outputs' folder
 # ggsave(here("outputs", "q1_combined.png"), combined_plot, width = 8, height = 12)
@@ -120,6 +125,7 @@ q2
 
 combined_plot <- q1a / q2
 print(combined_plot)
+#analogous to 90% confidence intervals, reduces the range of supported values pi
 ```
 
 
@@ -159,6 +165,9 @@ q5b
 
 q5c <- plik(d = 700, y = 50000)
 q5c
+
+combined_plot5 <- q5a / q5b / q5c
+print(combined_plot5)
 ```
 
 
@@ -247,6 +256,9 @@ q13a <- bloglik(d = 2, h = 18)
 q13a
 q13b <- bloglik(d = 20, h = 180)
 q13b
+
+combined_plot13 <- q13a / q13b
+print(combined_plot13)
 ```
 
 ## Question 14
