@@ -30,16 +30,16 @@ library(here)
 library(survival)  # for clogit()
 
 # Source custom functions
-source(here("sme-2026/functions/matched_functions.R"))
-source(here("sme-2026/functions/or_function.R"))
-source(here("sme-2026/functions/mh_functions_updated.R"))
+source(here("SME/functions/matched_functions.R"))
+source(here("SME/functions/or_function.R"))
+source(here("SME/functions/mh_functions_updated.R"))
 
 
 # Set options
 options(digits = 3, scipen = 999)
 ```
 
-The survival package provides the `clogit()` function for conditional logistic regression, which is the standard method for analysing matched case-control data. We also load custom functions for creating matched tables and calculating matched odds ratios.
+The survival package provides the `clogit()` function for conditional logistic regression, which is the standard method for analysing v for creating matched tables and calculating matched odds ratios.
 
 ---
 
@@ -51,7 +51,7 @@ Import the diabraz dataset and explore its structure.
 
 ```{r import}
 # Import data
-diabraz <- read_stata(here("sme-2026","data", "diabraz.dta"))
+diabraz <- read_stata(here("SME","data", "diabraz.dta"))
 
 # Explore the data
 glimpse(diabraz)
@@ -170,8 +170,9 @@ The key difference from standard logistic regression is that conditional logisti
 
 ```{r q6_clogit_bf}
 # Conditional logistic regression for breastfeeding
-clogit(case ~ not_breastfed + strata(set), data = diabraz) |> 
+mod1<-clogit(case ~ not_breastfed + strata(set), data = diabraz) |> 
   tbl_regression(exponentiate = TRUE)
+summary(mod1)
 ```
 
 The OR from conditional logistic regression matches exactly the OR from the matched table analysis. This demonstrates that for 1:1 matched data with a single binary exposure, the matched table analysis and conditional logistic regression give identical results.
@@ -194,7 +195,7 @@ Now load diabraz2, which has 2 controls matched to each case. This is called 1:2
 
 ```{r q7_import}
 # Import data with 2 controls per case
-diabraz2 <- read_stata(here("sme-2026", "data", "diabraz2.dta"))
+diabraz2 <- read_stata(here("SME", "data", "diabraz2.dta"))
 
 # Explore
 glimpse(diabraz2)
