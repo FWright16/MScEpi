@@ -1,0 +1,109 @@
+---
+title: "A (very) brief introduction to the tidyverse"
+subtitle: "for the Analysis of EHR data module"
+output: html_notebook
+---
+
+In these practicals, we will be using the tidyverse suite of tools; a collection of packages popular for data science. We'll be mostly using functions from the `dplyr` package which is used for data manipulation and has syntax similar to SQL queries. Cheat sheets for various tidyverse packages can be found here: https://www.rstudio.com/resources/cheatsheets/
+
+Begin by opening R Studio (or equivalent). Open the .Rmd file that corresponds to this html, through the dropdown menus File -> Open File (assuming you are first reading the html file; if you are already reading the .Rmd file then you have already done this step!).  
+
+This R markdown file is made up of "chunks" of code with text comments in between. You can run each chunk of code individually by clicking on the green arrow inside the chunk. Alternatively, the "Run" button on the ribbon at the top of the .Rmd file gives a number of different options for running the chunks of code. 
+
+First, you will need to install the package `dplyr`. The easiest way to get dplyr is to install the whole tidyverse, especially since we will need the more general tidyverse package later. To install `tidyverse`, type: `install.packages("tidyverse")` into the R console window. The Console window is at the bottom left of R Studio. You may need to click to the right of the bottom ">" sign to activate the window. 
+
+Try and run the code in the following chunks step by step to familiarise yourself with some `dplyr` functions and the pipe-syntax.
+
+First, we load the `tidyverse` package.
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+
+Let's begin by making some very simple data.
+
+```{r}
+pat <- data.frame(patid=1:100,
+                  gender=sample(c("Male", "Female"), 100, replace = TRUE),
+                  yob=sample(1950:2000, 100, replace = TRUE))
+pat
+```
+
+
+```{r}
+# In R we can subset a dataframe using []
+pat[c("patid", "gender")] #Pick columns by name
+pat[pat$gender=="Female",] #Filter to rows matching a condition (with a commma)
+
+# We can achieve the same results using dplyr's select and filter functions
+select(pat, patid, gender)
+filter(pat, gender=="Female")
+
+# Since the first argument of dplyr function is always the data, we can also write this code in a different style. "Pipes" take the result of the previous function and "pipe" it into the next function. They look like this "%>%" or this "|>" (only works in newer versions of R). Try the keyboard shortcut Ctrl+Shift+M on Windows or Cmd+Shift+M on Mac.
+pat %>% select(patid, gender)
+pat %>% filter(gender=="Female")
+
+# This gets really useful when we start chaining operations together, as it keeps the code readable.
+pat %>% #Take the "pat" dataframe ...
+  select(patid, gender) %>% #... then select the "patid" and "gender" variables ...
+  filter(gender=="Female") %>%  #... then filter to rows where the gender is "Female" ...
+  arrange(patid) %>% #... then arrange (ascendingly) by "patid" ...
+  rename(sex=gender) #... then rename "gender" to "sex".
+# This could also be written as the much less readable: rename(arrange(filter(select(pat, patid, gender), gender=="Female"), patid), sex=gender)
+```
+
+Next, let's produce some summary information:
+```{r}
+# The summarise function applies functions to columns to create a new table of summary statistics.
+pat %>% 
+  summarise(mean_yob=mean(yob))
+
+# We can also group our data, then the summarising functions will be performed per group.
+pat %>% 
+  group_by(gender) %>% 
+  summarise(n=n(),
+            mean_yob=mean(yob))
+```
+
+Now, let's create some new variables:
+```{r}
+# The mutate function creates new variables and can use information from other variables
+pat %>% 
+  mutate(age=2022-yob)
+
+# We can use if else statements to create indicator variables
+pat %>% 
+  mutate(agegroup=ifelse(yob<1965, "Baby Boomers and older", "Gen X and younger"))
+
+# If we want a variable with more than 2 levels, we can either use nested ifelse statements, or the more succinct case_when:
+pat %>% 
+  mutate(agegroup=case_when(yob<1965 ~ "Baby Boomers and older",
+                             yob<1981 ~ "Gen X",
+                             yob>=1981 ~ "Millenials and younger"))
+```
+
+Lastly, we will need to merge tables together when working with EHR data. This is accomplished in dplyr using "joins":
+```{r}
+# Let's make some more example dataframes
+death <- data.frame(patid=sample(pat$patid, 20),
+                    deathdate=sample(2010:2015, 20, replace = TRUE))
+drugs <- data.frame(patid=sample(pat$patid, 500, replace = TRUE),
+                    eventdate=sample(2000:2010, 500, replace = TRUE),
+                    drug=sample(c("A", "B", "C", "D"), 500, replace = TRUE))
+
+
+# A left_join(x,y) joins matching values from y to x. This means all rows in x will be kept, but only rows in y with a match will be kept.
+pat %>% 
+  left_join(death, by="patid")
+# If there are multiple rows with a match, they will all be kept.
+pat %>% 
+  left_join(drugs, by="patid")
+
+# An inner join keeps only rows with matches.
+pat %>% 
+  inner_join(death, by="patid")
+```
+
+
+
