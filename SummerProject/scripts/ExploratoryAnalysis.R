@@ -37,6 +37,12 @@ icb_year_summary <- analysis_data %>%
     .groups='drop'
   )
 
+# rates_2023 <- icb_year_summary %>%
+#    filter(YEAR==2023) %>%
+#    select(ICB_CODE,rate)
+
+#readr::write_csv(rates_2023,'rates_2023.csv')
+
 #summary(icb_year_summary$rate) # Gives crude overall rate not accounting for age, sex, BNF antibiotic
 
 ggplot(icb_year_summary,aes(x=factor(YEAR),y=rate))+

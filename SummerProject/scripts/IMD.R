@@ -25,6 +25,8 @@ imd_clean <- imd %>%
 
 #table(imd_clean$IMD_quintile) # Check distribution of quintiles
 
+#readr::write_csv(imd_clean,'imd_ICBs.csv')
+
 # -------------------------------------------------------------
 # 3. Merge IMD into analysis dataset
 # -------------------------------------------------------------

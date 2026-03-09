@@ -1,8 +1,20 @@
-.Rproj.user
+# R outputs
+*.Rds
+*.html
+*.RData
+
+# GIS outputs  
+*.qgz
+*.kml
+*.gpkg
+
+# Images/PDFs
+*.png
+*.pdf
+
+# Office temp
+~$*
+
+.DS_Store
 .Rhistory
-.RData
-.Ruserdata
-.DS_Store
-**/.DS_Store
-.DS_store
-.DS_Store
+.Rproj.user/

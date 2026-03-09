@@ -3,15 +3,6 @@
 # =============================================================
 
 # -------------------------------------------------------------
-# 1. Load Packages
-# -------------------------------------------------------------
-library(tidyverse)
-library(readr)
-library(dplyr)
-library(here)
-library(stringr)
-
-# -------------------------------------------------------------
 # 2. Import monthly prescribing data
 # -------------------------------------------------------------
 # Assumes all raw prescribing data (csv) are stored in data/ICB_Data/ relative to project root
@@ -34,7 +25,7 @@ presc_monthly <- list.files(
 # -------------------------------------------------------------
 
 presc_clean <-presc_monthly %>% 
-  mutate(
+  dplyr::mutate(
     # Replace 2 for other values of *
     UNIQUE_PATIENT_COUNT=ifelse(UNIQUE_PATIENT_COUNT=='*',2,UNIQUE_PATIENT_COUNT),
     ITEMS=ifelse(ITEMS=='*',2,ITEMS),
@@ -107,6 +98,8 @@ presc_year_icb_all_bnf <- presc_clean %>%
     AGE_START
   ) %>%
   select(-AGE_START)
+
+#sum(is.na(presc_year_icb_all_bnf))
 
 # For separate BNF drugs
 # presc_year_icb <- presc_clean %>% 
